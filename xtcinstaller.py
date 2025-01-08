@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# you can either exexute it as
+# you can either execute it as
 # ./xtcinstaller.py [args]
 # python3 xtcinstaller.py [args]
 
@@ -334,7 +334,7 @@ def install_platform(install_dir : str, operating_system : OperatingSystem) -> b
     print(f"Error updating package.json: {e}")
     return False
 
-  # exeute some npm commands
+  # execute some npm commands
   commands = [
     ["sudo", "npm", "install"],
     ["sudo", "npm", "install", "-g", "@quasar/cli"]
