@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+# you can either exexute it as
+# ./xtcinstaller.py [args]
+# python3 xtcinstaller.py [args]
+
 import inspect
 import json
 import os
@@ -216,19 +222,20 @@ def amend_firewall_rules(platform_folder_path : str, operating_system : Operatin
       try:
         with open(filename, "w") as file:
           file.write("\n")  # Write an empty line first
-          file.write("rdr pass on lo0 inet proto tcp from any to self port 80 -> 127.0.0.1 port 8080\n")
-          file.write("rdr pass on lo0 inet proto tcp from any to self port 443 -> 127.0.0.1 port 8090\n")
+
+          # only if we want to enable the rules we will write them into the file
+          # an empty file will remove previously added rules
+          if enable:
+            file.write("rdr pass on lo0 inet proto tcp from any to self port 80 -> 127.0.0.1 port 8080\n")
+            file.write("rdr pass on lo0 inet proto tcp from any to self port 443 -> 127.0.0.1 port 8090\n")
+
         print(f"File '{filename}' created successfully.")
+
       except OSError as e:
         print(f"Error creating file: {e}")
         return False
 
-      # Issue this command to redirect incoming http* traffic to the PaaS
-      enable_disable = "e" if enable else "d"
-
-      # m = merge rules
-      # r = to replace existing rules with the same anchor, interface, and direction. This prevents duplicates but might unintentionally modify existing rules.
-      command = ["sudo", "pfctl", f"-{enable_disable}vmrf", filename]
+      command = ["sudo", "pfctl", "-f", filename]
       success = execute_commmand(command)
       if not success:
         print("You can ignore the above error because the rules either already already exist or have been deleted. Nothing to see here.")
@@ -241,23 +248,29 @@ def amend_firewall_rules(platform_folder_path : str, operating_system : Operatin
           nop = None
 
     case OperatingSystem.Linux:
+      """
+      commands = [
+        ['sudo', 'nft', 'add', 'chain', 'nat', 'prerouting'],
+        ['sudo', 'nft', 'add', 'rule', 'nat', 'prerouting', 'tcp', 'dport', '80', 'redirect', 'to', ':8080'],
+        ['sudo', 'nft', 'add', 'rule', 'nat', 'prerouting', 'tcp', 'dport', '443', 'redirect', 'to', ':8090']
+      ]
 
-      commands = []
+      if not enable:
 
-      if enable:
-        # add the chain and the rules
-        commands = commands + ['sudo', 'nft', 'add', 'chain', 'nat', 'prerouting']
-        commands = commands + ['sudo', 'nft', 'add', 'rule', 'nat', 'prerouting', 'tcp', 'dport', '80', 'redirect', 'to', ':8080']
-        commands = commands + ['sudo', 'nft', 'add', 'rule', 'nat', 'prerouting', 'tcp', 'dport', '443', 'redirect', 'to', ':8090']
-      else:
-        # delete the whole lot
-        commands = commands + ['sudo', 'nft', 'delete', 'chain', 'nat', 'prerouting']
+        # if we want to disable them, then we remove them in reverse order
+        commands.reverse()
+
+        for command in commands:
+          for i, cmd in enumerate(command):
+            if cmd == 'add':
+              command[i] = 'delete'
+
 
       success = execute_commmands(commands)
       if not success:
         print("You can ignore the above error because the rules either already already exist or have been deleted. Nothing to see here.")
         success = True
-
+      """
     case OperatingSystem.Windows:
       print(f"{current_function_name}(): to do")
 
@@ -323,8 +336,8 @@ def install_platform(install_dir : str, operating_system : OperatingSystem) -> b
 
   # exeute some npm commands
   commands = [
-    ["npm", "install"],
-    ["npm", "install", "-g", "@quasar/cli"]
+    ["sudo", "npm", "install"],
+    ["sudo", "npm", "install", "-g", "@quasar/cli"]
   ]
 
   success = execute_commmands(commands)
