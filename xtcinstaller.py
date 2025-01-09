@@ -336,8 +336,8 @@ def install_platform(install_dir : str, operating_system : OperatingSystem) -> b
 
   # execute some npm commands
   commands = [
-    ["sudo", "npm", "install"],
-    ["sudo", "npm", "install", "-g", "@quasar/cli"]
+    ["npm", "install"],
+    ["npm", "install", "-g", "@quasar/cli"]
   ]
 
   success = execute_commmands(commands)
