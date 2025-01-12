@@ -251,7 +251,7 @@ def amend_firewall_rules(platform_folder_path : str, operating_system : Operatin
       option = "A" if enable else "D"
       commands = [
         f"sudo iptables -t nat -{option} OUTPUT -p tcp --dport 80 -j DNAT --to-destination :8080".split(),
-        f"sudo iptables -t nat -{option} OUTPUT -p tcp --dport 443 -j DNAT --to-destination :8090".split()
+        f"sudo iptables -t nat -{option} OUTPUT -p tcp --dport 443 -j DNAT --to-destination :8090".split(),
         f"sudo iptables -t nat -{option} PREROUTING -p tcp --dport 80 -j DNAT --to-destination :8080".split(),
         f"sudo iptables -t nat -{option} PREROUTING -p tcp --dport 443 -j DNAT --to-destination :8090".split()
       ]
