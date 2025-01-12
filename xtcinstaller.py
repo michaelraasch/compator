@@ -248,29 +248,21 @@ def amend_firewall_rules(platform_folder_path : str, operating_system : Operatin
           nop = None
 
     case OperatingSystem.Linux:
-      """
+      option = "A" if enable else "D"
       commands = [
-        ['sudo', 'nft', 'add', 'chain', 'nat', 'prerouting'],
-        ['sudo', 'nft', 'add', 'rule', 'nat', 'prerouting', 'tcp', 'dport', '80', 'redirect', 'to', ':8080'],
-        ['sudo', 'nft', 'add', 'rule', 'nat', 'prerouting', 'tcp', 'dport', '443', 'redirect', 'to', ':8090']
+        f"sudo iptables -t nat -{option} OUTPUT -p tcp --dport 80 -j DNAT --to-destination :8080".split(),
+        f"sudo iptables -t nat -{option} OUTPUT -p tcp --dport 443 -j DNAT --to-destination :8090".split()
+        f"sudo iptables -t nat -{option} PREROUTING -p tcp --dport 80 -j DNAT --to-destination :8080".split(),
+        f"sudo iptables -t nat -{option} PREROUTING -p tcp --dport 443 -j DNAT --to-destination :8090".split()
       ]
 
-      if not enable:
-
-        # if we want to disable them, then we remove them in reverse order
-        commands.reverse()
-
-        for command in commands:
-          for i, cmd in enumerate(command):
-            if cmd == 'add':
-              command[i] = 'delete'
-
+      if enable:
+        commands = commands + [ "sudo iptables-save > /etc/iptables/rules.v4".split() ]
 
       success = execute_commmands(commands)
       if not success:
         print("You can ignore the above error because the rules either already already exist or have been deleted. Nothing to see here.")
         success = True
-      """
     case OperatingSystem.Windows:
       print(f"{current_function_name}(): to do")
 
@@ -303,8 +295,23 @@ def install_platform(install_dir : str, operating_system : OperatingSystem) -> b
       os.makedirs(folder, exist_ok=True)  # Create the folder
       print(f"Folder '{folder}' created successfully.")
 
+    # add the config file
+    data = {
+      "dName": "CN=xtc-platform.localhost.xqiz.it",
+      "cert-provider": "self",
+      "httpPort": 8080,
+      "httpsPort": 8090
+    }
+
+    cfg_filename = os.path.join(platform_folder_path, "cfg.json")
+
+    with open(cfg_filename, "w") as f:
+      json.dump(data, f, indent=2)  # Write the data to the file with indentation
+
+    print(f"File '{cfg_filename}' created successfully.")
+
   except OSError as e:
-    print(f"Error creating folder: {e}")
+    print(f"Error: {e}")
     return False
 
   success = add_firewall_rules(platform_folder_path, operating_system)
@@ -313,7 +320,9 @@ def install_platform(install_dir : str, operating_system : OperatingSystem) -> b
     return success
 
   # Change directory to ./platform/platformUI/gui
-  os.chdir(f"./{repo}/platformUI/gui")
+  gui_path = os.path.join(".", repo, "platformUI", "gui")
+
+  os.chdir(gui_path)
 
   # update the content of package.json and fix the quasar version
   filename = "package.json"
@@ -438,7 +447,7 @@ if __name__ == "__main__":
     repo = sys.argv[1]
     success = main(repo, operating_system)
   else:
-    print("fUnsupported operating system {sys.platform}")
+    print(f"Unsupported operating system {sys.platform}")
     success = False
 
   if success:
