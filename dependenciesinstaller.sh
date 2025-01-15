@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash -i
 
 # Detect the OS
 OS=$(uname -s)
 
 # Determine the correct rc file
-if [[ -n "$ZSH_VERSION" ]]; then
+if [[ -n "$ZSH_VERSION" ]] || [[ "$SHELL" == "/bin/zsh" ]]; then
   RC_FILE=".zshrc"
 else
   RC_FILE=".bashrc"
@@ -13,19 +13,18 @@ fi
 # Explicitly source the rc file
 source ~/$RC_FILE
 
-# Install nvm
-if [[ "$OS" == "Darwin" ]]; then
-  brew install nvm
-elif [[ "$OS" == "Linux" ]]; then
+if [[ "$OS" == "Linux" ]]; then
   sudo apt -y update
   sudo apt -y install zip iptables-persistent
-  # Check if nvm is already installed
-  if [[ ! -d "NVM_DIR" ]]; then
+fi
+# Install nvm
+
+# Check if nvm is already installed
+if [[ ! -d "$NVM_DIR" ]]; then
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-  else
-    echo "nvm is already installed."
-    source $NVM_DIR/nvm.sh
-  fi  
+else
+  echo "nvm is already installed."
+  source $NVM_DIR/nvm.sh
 fi
 
 # Source the rc file to apply changes
@@ -51,6 +50,10 @@ source ~/$RC_FILE
 
 # Install Java
 sdk install java 21.0.5-tem
+
+# Set JAVA_HOME and add it to RC_FILE
+export JAVA_HOME="$SDKMAN_DIR/candidates/java/current"
+echo "export JAVA_HOME=\"$SDKMAN_DIR/candidates/java/current\"" >> ~/$RC_FILE
 
 # Source the rc file to apply changes
 source ~/$RC_FILE
