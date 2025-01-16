@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -i
+#!/usr/bin/env bash
 
 # Detect the OS
 OS=$(uname -s)
@@ -45,6 +45,7 @@ else
   source $SDKMAN_DIR/bin/sdkman-init.sh
 fi
 
+source $SDKMAN_DIR/bin/sdkman-init.sh
 # Source the rc file to apply changes
 source ~/$RC_FILE
 
@@ -60,5 +61,9 @@ source ~/$RC_FILE
 
 # Install Gradle
 sdk install gradle
+
+# source the sdkman stuff again so we have the environment all set
+source $SDKMAN_DIR/bin/sdkman-init.sh
+
 
 echo "Installation complete!"
