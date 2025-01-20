@@ -235,7 +235,7 @@ def amend_firewall_rules(platform_folder_path : str, operating_system : Operatin
         print(f"Error creating file: {e}")
         return False
 
-      command = ["sudo", "pfctl", "-f", filename]
+      command = ["sudo", "pfctl", "-evf", filename]
       success = execute_commmand(command)
       if not success:
         print("You can ignore the above error because the rules either already already exist or have been deleted. Nothing to see here.")
